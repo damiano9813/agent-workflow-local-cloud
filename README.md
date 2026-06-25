@@ -25,6 +25,28 @@ The Qwen provider is intentionally not duplicated here. It is expected to exist 
 
 Copy `AGENTS.md` and `.opencode/` into the root of any project where you want this workflow.
 
+Or run the interactive installer:
+
+```bash
+./scripts/install.sh /path/to/project
+```
+
+If no path is provided, the installer asks for one and defaults to the current directory.
+
+The installer prompts for:
+
+- Target project path.
+- Build model.
+- Plan model.
+- Explore model.
+- Scout model.
+- Review model.
+- Stacktrace model.
+
+If the target project already has `.opencode`, the installer asks for one confirmation, backs up the existing directory, and installs the workflow. Backups use the suffix `.bak.YYYYMMDD-HHMMSS`.
+
+If the target project already has `AGENTS.md`, the installer does not overwrite it. It installs this workflow as `OPEN_CODE_WORKFLOW.md` and configures OpenCode to load both files.
+
 From that project root, restart OpenCode after copying or editing configuration files. OpenCode loads config at startup and does not hot-reload it.
 
 Ensure llama.cpp is running an OpenAI-compatible endpoint at:
