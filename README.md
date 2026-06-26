@@ -31,6 +31,12 @@ Or run the interactive installer:
 ./scripts/install.sh /path/to/project
 ```
 
+Preview an installation without changing files:
+
+```bash
+./scripts/install.sh --dry-run /path/to/project
+```
+
 If no path is provided, the installer asks for one and defaults to the current directory.
 
 The installer prompts for:
@@ -46,6 +52,12 @@ The installer prompts for:
 If the target project already has `.opencode`, the installer asks for one confirmation, backs up the existing directory, and installs the workflow. Backups use the suffix `.bak.YYYYMMDD-HHMMSS`.
 
 If the target project already has `AGENTS.md`, the installer does not overwrite it. It installs this workflow as `OPEN_CODE_WORKFLOW.md` and configures OpenCode to load both files.
+
+Validate this template after editing it:
+
+```bash
+./scripts/validate.sh
+```
 
 From that project root, restart OpenCode after copying or editing configuration files. OpenCode loads config at startup and does not hot-reload it.
 
@@ -75,6 +87,7 @@ All Qwen agents deny file edits and ask before bash commands.
 - `/explore`: repository exploration with Qwen.
 - `/review`: code or diff review with Qwen.
 - `/debug`: error, stacktrace, log, or failing test analysis with Qwen.
+- `/scout`: documentation, architecture, convention, setup, and testing summary with Qwen.
 - `/feature`: GPT-5.5 feature workflow with exploration-first behavior.
 - `/refactor`: GPT-5.5 behavior-preserving refactor workflow.
 
@@ -103,7 +116,6 @@ These skills encode lightweight workflows and project-specific exploration check
 
 Possible future improvements, not implemented here:
 
-- Add a validation script that checks copied templates against the OpenCode schema.
 - Add project-specific command variants for Maven, Gradle, npm, pnpm, or Docker.
 - Add stricter bash allowlists for Qwen agents once project command conventions are known.
 - Add team-specific coding standards as extra instruction files.

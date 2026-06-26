@@ -11,6 +11,16 @@ DEFAULT_STACKTRACE_MODEL="llamacpp/unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_XL"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TEMPLATE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
+usage() {
+  cat <<'EOF'
+Usage: scripts/install.sh [--dry-run] [target-project-path]
+
+Options:
+  -n, --dry-run  Show what would be installed without writing files.
+  -h, --help     Show this help.
+EOF
+}
+
 prompt() {
   local label="$1"
   local default="$2"
@@ -38,6 +48,35 @@ backup_path() {
   if [ -e "$path" ]; then
     mv "$path" "$path.bak.$timestamp"
     printf 'Backed up %s -> %s\n' "$path" "$path.bak.$timestamp"
+  fi
+}
+
+print_plan() {
+  local target_path="$1"
+  local instruction_file="$2"
+  local build_model="$3"
+  local plan_model="$4"
+  local explore_model="$5"
+  local scout_model="$6"
+  local review_model="$7"
+  local stacktrace_model="$8"
+
+  printf '\nInstallation summary:\n'
+  printf 'Target: %s\n' "$target_path"
+  printf 'Instruction file: %s\n' "$instruction_file"
+  printf 'Build: %s\n' "$build_model"
+  printf 'Plan: %s\n' "$plan_model"
+  printf 'Explore: %s\n' "$explore_model"
+  printf 'Scout: %s\n' "$scout_model"
+  printf 'Review: %s\n' "$review_model"
+  printf 'Stacktrace: %s\n' "$stacktrace_model"
+
+  printf '\nPlanned writes:\n'
+  printf '%s\n' "- $target_path/.opencode"
+  printf '%s\n' "- $target_path/$instruction_file"
+
+  if [ -e "$target_path/.opencode" ] || [ -e "$target_path/$instruction_file" ]; then
+    printf '\nExisting OpenCode workflow files were found. They will be backed up before overwrite.\n'
   fi
 }
 
@@ -88,7 +127,9 @@ set_command_model() {
 }
 
 main() {
-  local default_target="${1:-$(pwd)}"
+  local dry_run=false
+  local target_arg=""
+  local default_target
   local target_path
   local build_model
   local plan_model
@@ -99,6 +140,49 @@ main() {
   local instruction_file
   local instructions_json
   local timestamp
+
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      -n|--dry-run)
+        dry_run=true
+        shift
+        ;;
+      -h|--help)
+        usage
+        exit 0
+        ;;
+      --)
+        shift
+        if [ "$#" -gt 0 ]; then
+          target_arg="$1"
+          shift
+        fi
+        break
+        ;;
+      -*)
+        printf 'Unknown option: %s\n' "$1" >&2
+        usage >&2
+        exit 1
+        ;;
+      *)
+        if [ -n "$target_arg" ]; then
+          printf 'Only one target project path is supported.\n' >&2
+          usage >&2
+          exit 1
+        fi
+        target_arg="$1"
+        shift
+        ;;
+    esac
+  done
+
+  if [ "$#" -gt 0 ]; then
+    printf 'Only one target project path is supported.\n' >&2
+    usage >&2
+    exit 1
+  fi
+
+  default_target="${target_arg:-$(pwd)}"
 
   printf 'OpenCode multi-agent workflow installer\n\n'
 
@@ -130,18 +214,11 @@ main() {
     instructions_json='["AGENTS.md"]'
   fi
 
-  printf '\nInstallation summary:\n'
-  printf 'Target: %s\n' "$target_path"
-  printf 'Instruction file: %s\n' "$instruction_file"
-  printf 'Build: %s\n' "$build_model"
-  printf 'Plan: %s\n' "$plan_model"
-  printf 'Explore: %s\n' "$explore_model"
-  printf 'Scout: %s\n' "$scout_model"
-  printf 'Review: %s\n' "$review_model"
-  printf 'Stacktrace: %s\n' "$stacktrace_model"
+  print_plan "$target_path" "$instruction_file" "$build_model" "$plan_model" "$explore_model" "$scout_model" "$review_model" "$stacktrace_model"
 
-  if [ -e "$target_path/.opencode" ] || [ -e "$target_path/$instruction_file" ]; then
-    printf '\nExisting OpenCode workflow files were found. They will be backed up before overwrite.\n'
+  if [ "$dry_run" = true ]; then
+    printf '\nDry run complete. No files were changed.\n'
+    exit 0
   fi
 
   if ! confirm "Continue with installation"; then
